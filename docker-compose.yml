@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  demo-trade-db:
+    image: postgres:15
+    container_name: demo-trade-db
+    environment:
+      POSTGRES_DB: demo_db
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+    ports:
+      - "5433:5432"
+    volumes:
+      - demo_trade_db_data:/var/lib/postgresql/data
+
+volumes:
+  demo_trade_db_data:
