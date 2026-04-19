@@ -29,7 +29,9 @@ public class TradeService {
                 request.getTradeType(),
                 request.getQuantity(),
                 request.getPrice(),
-                request.getTradeDate()
+                request.getTradeDate(),
+                request.getSignalType(),
+                request.getEntryReason()
         );
 
         Trade savedTrade = tradeRepository.save(trade);
@@ -53,6 +55,12 @@ public class TradeService {
         }
         if (request.getTradeDate() == null) {
             throw new IllegalArgumentException("tradeDate is required");
+        }
+        if (request.getSignalType() == null) {
+            request.setSignalType(SignalType.NONE);
+        }
+        if (request.getEntryReason() == null || request.getEntryReason().isBlank()) {
+            request.setEntryReason("理由未設定");
         }
     }
 }

@@ -59,6 +59,18 @@ public class PositionService {
 
         return result;
     }
+    
+    public PositionPlSummaryResponse getPositionPlSummary(Long userId) {
+        List<PositionPlResponse> positionPlList = getPositionPl(userId);
+
+        BigDecimal totalProfitLoss = BigDecimal.ZERO;
+
+        for (PositionPlResponse item : positionPlList) {
+            totalProfitLoss = totalProfitLoss.add(item.getProfitLoss());
+        }
+
+        return new PositionPlSummaryResponse(totalProfitLoss, positionPlList.size());
+    }
 
     public void updatePositionByTrade(Trade trade) {
         Long userId = DEMO_USER_ID;

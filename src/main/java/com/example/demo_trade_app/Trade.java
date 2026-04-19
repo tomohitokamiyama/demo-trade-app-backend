@@ -25,15 +25,30 @@ public class Trade {
     private double price;
     private LocalDate tradeDate;
 
+    @Enumerated(EnumType.STRING)
+    private SignalType signalType;
+
+    private String entryReason;
+
     public Trade() {
     }
 
-    public Trade(String symbol, TradeType tradeType, int quantity, double price, LocalDate tradeDate) {
+    public Trade(
+            String symbol,
+            TradeType tradeType,
+            int quantity,
+            double price,
+            LocalDate tradeDate,
+            SignalType signalType,
+            String entryReason
+    ) {
         this.symbol = symbol;
         this.tradeType = tradeType;
         this.quantity = quantity;
         this.price = price;
         this.tradeDate = tradeDate;
+        this.signalType = signalType;
+        this.entryReason = entryReason;
     }
 
     public Long getId() {
@@ -60,6 +75,14 @@ public class Trade {
         return tradeDate;
     }
 
+    public SignalType getSignalType() {
+        return signalType;
+    }
+
+    public String getEntryReason() {
+        return entryReason;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -82,5 +105,13 @@ public class Trade {
 
     public void setTradeDate(LocalDate tradeDate) {
         this.tradeDate = tradeDate;
+    }
+
+    public void setSignalType(SignalType signalType) {
+        this.signalType = signalType;
+    }
+
+    public void setEntryReason(String entryReason) {
+        this.entryReason = entryReason;
     }
 }

@@ -42,7 +42,11 @@ public class SignalService {
         request.setTradeType(signal.getType());
         request.setQuantity(signal.getQuantity());
         request.setPrice(signal.getPrice());
-        request.setTradeDate(LocalDate.now());
+        request.setTradeDate(java.time.LocalDate.now());
+
+        request.setSignalType(SignalType.BULL);
+        request.setEntryReason(signal.getReason());
+
         return request;
     }
 

@@ -9,6 +9,8 @@ public class TradeRequest {
     private int quantity;
     private double price;
     private LocalDate tradeDate;
+    private SignalType signalType;
+    private String entryReason;
 
     public TradeRequest() {
     }
@@ -51,5 +53,21 @@ public class TradeRequest {
 
     public void setTradeDate(LocalDate tradeDate) {
         this.tradeDate = tradeDate;
+    }
+
+    public SignalType getSignalType() {
+        return signalType;
+    }
+
+    public void setSignalType(SignalType signalType) {
+        this.signalType = signalType;
+    }
+
+    public String getEntryReason() {
+        return entryReason;
+    }
+
+    public void setEntryReason(String entryReason) {
+        this.entryReason = entryReason;
     }
 }

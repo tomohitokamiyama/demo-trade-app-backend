@@ -1,215 +1,213 @@
-# Demo Trade App Backend
+# Demo Trade App
 
-Spring Boot + PostgreSQL + Docker で開発している、デモトレードWebアプリのバックエンドです。  
-シグナルに基づく売買、取引履歴、ポジション管理、日次価格管理、含み損益計算を実装しています。
+Spring Boot + PostgreSQL + Docker + React で開発している、デモトレードWebアプリです。  
+相場状況に応じたおすすめ取引の表示、売買履歴管理、保有ポジション管理、含み損益確認ができる構成を目指しています。
 
 ## 技術構成
 
+### バックエンド
 - Java 21
 - Spring Boot
+- Spring Data JPA
 - PostgreSQL
 - Docker
-- Maven
+
+### フロントエンド
+- React
+- TypeScript
+- Vite
+- React Router
 
 ## アプリ概要
 
-デモトレードを行うためのバックエンドアプリです。  
-シグナルを登録し、シグナル実行によって Trade を生成し、Position を自動更新する構成にしています。
+相場状況をもとに、おすすめ株・日経平均mini売り・オプション戦略などの取引候補を提示し、  
+実際の売買履歴や保有ポジション、損益を確認できるデモトレードアプリです。
 
-将来的には以下のような画面を想定しています。
+## 現在の画面構成
 
-- Topページ: 相場感表示
-- My取引ページ: ポジション、損益確認
-- おすすめ株ページ: 上昇トレンド銘柄
-- 日経平均売り建てページ: リバーサル時の売りシグナル表示
-- オプション戦略ページ: 将来的に検討
+- Topページ
+- おすすめ株ページ
+- My取引ページ
+- 取引履歴ページ
 
-## 設計方針
+## ページ概要
 
-- API単位ではなくドメイン単位で分割
-- Controller / Service / Repository を責務ごとに分離
-- Position は Trade を起点に自動更新し、直接操作しない
-- DailyPrice は履歴を保持し、最新値の上書きではなく蓄積する
-- 日足データは `(symbol, price_date)` をユニーク制約で管理する
+### Topページ
+- 上昇トレンド
+- ボックス相場
+- 下降トレンド
 
-## ドメイン構成
+の3つの相場パターンを前提に、おすすめ取引の方向性を表示します。
 
-- Signal
-- Trade
-- Position
-- DailyPrice
-- Instrument
+### おすすめ株ページ
+Python で抽出した安定株候補を表示することを想定したページです。  
+現時点では仮データを用いて、候補銘柄を一覧表示し、売買フローにつなげるUIを作成しています。
+
+### My取引ページ
+- 現在保有しているポジション
+- 含み損益
+- 保有銘柄数
+- 合計含み損益
+
+を確認できます。
+
+### 取引履歴ページ
+実際に行った取引履歴を確認できます。  
+取引には `signalType` と `entryReason` を保持しており、
+
+- 相場シグナルが出ていた時に行った取引
+- シグナルが出ていない状態で行った取引
+
+を比較しやすい構成にしています。
+
+## ドメインの考え方
+
+### Signal
+このアプリにおけるシグナルは、以下の3種類の相場シグナルを想定しています。
+
+- 強気相場シグナル
+- 下降シグナル
+- ボックスシグナル
+
+### Trade
+実際に行った売買履歴です。  
+`signalType` と `entryReason` を持たせることで、  
+その取引がどの相場シグナルに基づいて行われたか、あるいはシグナルなしで行われたかを後から確認できるようにしています。
+
+### Position
+Trade の結果として現在保有している状態です。
+
+### DailyPrice
+日次価格データを保持するテーブルです。  
+価格履歴を蓄積し、現在価格や含み損益計算の元データとして使用します。
 
 ## 現在の実装機能
 
-### Signal
+### バックエンド
 - Signal 一覧取得
 - Signal 登録
-- Signal 個別実行
-- Signal 一括実行
-- `NEW / EXECUTED` の状態管理
-- 重複実行防止
+- Signal 実行
+- Trade 保存
+- Position 自動更新
+- DailyPrice 参照
+- 含み損益 API
+- 損益サマリ API
+- 取引履歴に `signalType` / `entryReason` を保持
 
-### Trade
-- Trade 履歴保存
-- Trade 一覧取得
+### フロントエンド
+- Topページ表示
+- おすすめ株ページ表示
+- My取引ページ表示
+- 取引履歴ページ表示
+- 画面からの Signal 登録・実行
+- API 連携による Position / 損益 / 履歴表示
 
-### Position
-- Trade 実行時に Position を自動更新
-- LONG / SHORT の管理
-- OPEN / CLOSED の管理
-- 平均単価方式で更新
+## API 一覧
 
-### DailyPrice
-- 日次価格テーブルを保持
-- 銘柄別の日足履歴取得
-- 最新価格参照のベースとして利用
+## バックエンド主要クラス一覧
 
-### 損益
-- 保有ポジションに対する含み損益を API で返却
+### エントリーポイント
+- `DemoTradeAppApplication.java`  
+  Spring Boot の起動クラス
 
-## API一覧
+### Signal関連
+- `Signal.java`  
+  Signal エンティティ。売買候補データを保持するクラス
+- `SignalStatus.java`  
+  Signal の状態（NEW / EXECUTED）を表す enum
+- `SignalRepository.java`  
+  Signal テーブルにアクセスする Repository
+- `SignalService.java`  
+  Signal の取得・登録・TradeRequest 変換を担当
+- `SignalExecutionService.java`  
+  Signal 実行処理を担当し、Trade 作成までつなぐ
+- `SignalController.java`  
+  Signal API を提供する Controller
+- `SignalCreateRequest.java`  
+  Signal 登録時のリクエストDTO
 
-### Signal
-- `GET /signals`
-- `GET /signals?status=NEW`
-- `POST /signals`
-- `POST /signals/{id}/execute`
-- `POST /signals/execute`
+### Trade関連
+- `Trade.java`  
+  実際に行った売買履歴を保持するエンティティ
+- `TradeType.java`  
+  売買種別（BUY / SELL / SHORT / COVER）を表す enum
+- `SignalType.java`  
+  相場シグナル種別（BULL / BEAR / BOX / NONE）を表す enum
+- `TradeRequest.java`  
+  Trade 作成時のリクエストDTO
+- `TradeRepository.java`  
+  Trade テーブルにアクセスする Repository
+- `TradeService.java`  
+  Trade 保存処理と Position 更新連携を担当
+- `TradeController.java`  
+  Trade API を提供する Controller
 
-### Trade
-- `GET /trades`
-- `POST /trades`
+### Position関連
+- `Position.java`  
+  現在保有しているポジションを保持するエンティティ
+- `PositionType.java`  
+  ポジション方向（LONG / SHORT）を表す enum
+- `PositionStatus.java`  
+  ポジション状態（OPEN / CLOSED）を表す enum
+- `PositionRepository.java`  
+  Position テーブルにアクセスする Repository
+- `PositionService.java`  
+  Position の更新・取得・含み損益計算を担当
+- `PositionController.java`  
+  Position API を提供する Controller
+- `PositionPlResponse.java`  
+  含み損益表示用のレスポンスDTO
+- `PositionPlSummaryResponse.java`  
+  含み損益サマリ表示用のレスポンスDTO
 
-### Position
-- `GET /positions`
-- `GET /positions/pl`
+### DailyPrice関連
+- `DailyPrice.java`  
+  日次価格データを保持するエンティティ
+- `DailyPriceRepository.java`  
+  DailyPrice テーブルにアクセスする Repository
+- `DailyPriceService.java`  
+  日次価格取得ロジックを担当
+- `DailyPriceController.java`  
+  DailyPrice API を提供する Controller
 
-### DailyPrice
-- `GET /daily-prices`
-- `GET /daily-prices?symbol=7203`
-
-## 損益計算ルール
-
-### LONG
-(currentPrice - avgPrice) × quantity
-
-### SHORT
-(avgPrice - currentPrice) × quantity
+### Instrument関連
+- `Instrument.java`  
+  銘柄情報を表すクラス
+- `InstrumentService.java`  
+  銘柄情報の取得処理を担当
+- `InstrumentController.java`  
+  銘柄情報 API を提供する Controller
 
 ## DB設計のポイント
 
-### positions
-- 現在の保有状態を表すテーブル
-- 同一ユーザー、同一銘柄、同一方向の OPEN ポジションは1件
-
-### trades
-- 売買履歴を保存するテーブル
-- Position 更新の起点となる
-
 ### daily_prices
-- 1銘柄 × 1日 = 1レコード
-- `UNIQUE(symbol, price_date)` を付与
-- 5年高値判定やトレンド判定など、過去データの蓄積を前提に設計
+1銘柄 × 1日 = 1レコードで管理しています。
 
-### 進捗度
-完成形の認識
+- `UNIQUE(symbol, price_date)`
 
-最終的には、「日次価格データを自動取得し、それをもとにおすすめ株を出し、仮想売買と損益確認までできるWebアプリ」 です。
+を付与し、同じ日の価格データを二重登録しないようにしています。  
+履歴を残す設計にしており、5年高値判定やトレンド判定に活用できる形を意識しています。
 
-流れでいうとこうです。
+### trade
+売買履歴テーブルです。  
+以下の情報を持たせています。
 
-Lambda + EventBridge で日次価格取得
-yfinance系ソースから価格取得
-S3 / RDS に保存
-Spring Boot が業務APIを提供
-React が画面表示
-おすすめ株抽出結果を Signal に登録
-Signal を実行すると Trade / Position が更新
-Position と DailyPrice から損益確認
+- symbol
+- tradeType
+- quantity
+- price
+- tradeDate
+- signalType
+- entryReason
 
-つまり完成形は、データ取得基盤 + 売買管理 + 表示UI がつながった状態です。
-
-今の現在地の認識
-
-今は バックエンドのコア部分がかなりできている段階 です。
-
-実装済みとして認識しているのはこれです。
-
-できているもの
-Signal 登録
-Signal 一覧取得
-Signal 個別実行
-Signal 一括実行
-Signal の NEW / EXECUTED 管理
-重複実行防止
-Trade 保存
-Position 自動更新
-LONG / SHORT 管理
-OPEN / CLOSED 管理
-DailyPrice テーブル作成
-DailyPrice API
-含み損益 API
-
-つまり今は、
-
-Signal → Trade → Position → DailyPrice → PL
-
-のバックエンドの芯が通っています。
-
-まだ未完成の部分
-
-未完成として見ているのはこのへんです。
-
-1. フロント
-React 未接続
-画面なし
-2. 自動データ取得
-Lambda 未実装
-EventBridge 未実装
-yfinance 取得結果の自動投入未接続
-3. おすすめ株の自動連携
-Pythonの抽出ロジックはある
-でも Spring Boot の signals へ自動投入はまだ
-4. 損益の広がり
-今は含み損益のみ
-合計損益
-評価額
-実現損益
-損益推移
-は未実装
-5. 業務的な整え
-例外ハンドリングの共通化
-README 強化
-テストコード強化
-認証/ユーザー管理
-はまだこれから
-一言でいうと
-完成形
-
-自動で価格を取り込み、売買判断・仮想売買・損益確認までできるアプリ
-
-現在
-
-そのうち「売買管理と価格参照のバックエンドコア」はかなり完成している状態
-
-体感でいう完成度
-
-ざっくりですが、今の認識はこうです。
-
-バックエンドコア: 70〜80%
-アプリ全体: 45〜55%
-
-理由は、コアロジックはかなりある一方で、
-
-フロント
-自動取得基盤
-運用っぽい部分
-
-がまだ残っているからです。
+これにより、後から履歴を見たときに、  
+「シグナルが出ていたから売買したのか」  
+「シグナルが出ていないのに売買したのか」  
+を比較しやすくしています。
 
 ## ローカル起動方法
 
-### PostgreSQL起動
+### バックエンド
 ```bash
 docker compose up -d
+./mvnw spring-boot:run
