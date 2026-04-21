@@ -3,6 +3,25 @@
 Spring Boot + PostgreSQL + Docker + React で開発している、デモトレードWebアプリです。  
 相場状況に応じたおすすめ取引の表示、売買履歴管理、保有ポジション管理、含み損益確認ができる構成を目指しています。
 
+## このアプリを作ろうと思ったきっかけ
+
+私は、誰しもが毎日主要銘柄を数百種類モニタリングし、記録を取り続ければ、  
+相場の法則が見えてきて投資に勝てる可能性が上がると考えています。
+
+ただし、それを個人で継続するのは現実的に難しいため、  
+代わりに監視・記録・抽出をしてくれるサイトがあれば便利だと思い、このアプリを作り始めました。
+
+特に「おすすめ株ページ」は、そうした監視結果の中から、  
+条件に合致した候補を抽出して見せることを目的にしています。
+
+また、強気相場だけでなく、ボックス相場や下落の気配がある局面でも  
+勝てる精度を高められれば面白いと考えています。  
+そのため、オプション戦略や日経平均miniの売り戦略も検証対象に入れています。
+
+これらはリスクが高いため慎重に扱う必要がありますが、  
+実際に仮説ベースでトレードし、履歴と結果を残すことで、  
+自分の考えやデータが正しいかどうかを確認できるようにしたいと考えています。
+
 ## 技術構成
 
 ### バックエンド
@@ -81,6 +100,26 @@ Trade の結果として現在保有している状態です。
 日次価格データを保持するテーブルです。  
 価格履歴を蓄積し、現在価格や含み損益計算の元データとして使用します。
 
+## バックエンド構成（主要クラス）
+
+- `DemoTradeAppApplication.java`  
+  アプリ起動クラス
+
+- `Signal*`  
+  売買候補の取得・登録・実行を担当
+
+- `Trade*`  
+  売買履歴の保存と取得を担当
+
+- `Position*`  
+  保有ポジション管理と含み損益計算を担当
+
+- `DailyPrice*`  
+  日次価格データの保持と取得を担当
+
+- `Instrument*`  
+  銘柄情報の取得を担当
+
 ## 現在の実装機能
 
 ### バックエンド
@@ -104,79 +143,25 @@ Trade の結果として現在保有している状態です。
 
 ## API 一覧
 
-## バックエンド主要クラス一覧
+### Signal系
+- `GET /signals`
+- `GET /signals?status=NEW`
+- `POST /signals`
+- `POST /signals/{id}/execute`
+- `POST /signals/execute`
 
-### エントリーポイント
-- `DemoTradeAppApplication.java`  
-  Spring Boot の起動クラス
+### Trade系
+- `GET /trades`
+- `POST /trades`
 
-### Signal関連
-- `Signal.java`  
-  Signal エンティティ。売買候補データを保持するクラス
-- `SignalStatus.java`  
-  Signal の状態（NEW / EXECUTED）を表す enum
-- `SignalRepository.java`  
-  Signal テーブルにアクセスする Repository
-- `SignalService.java`  
-  Signal の取得・登録・TradeRequest 変換を担当
-- `SignalExecutionService.java`  
-  Signal 実行処理を担当し、Trade 作成までつなぐ
-- `SignalController.java`  
-  Signal API を提供する Controller
-- `SignalCreateRequest.java`  
-  Signal 登録時のリクエストDTO
+### Position系
+- `GET /positions`
+- `GET /positions/pl`
+- `GET /positions/pl/summary`
 
-### Trade関連
-- `Trade.java`  
-  実際に行った売買履歴を保持するエンティティ
-- `TradeType.java`  
-  売買種別（BUY / SELL / SHORT / COVER）を表す enum
-- `SignalType.java`  
-  相場シグナル種別（BULL / BEAR / BOX / NONE）を表す enum
-- `TradeRequest.java`  
-  Trade 作成時のリクエストDTO
-- `TradeRepository.java`  
-  Trade テーブルにアクセスする Repository
-- `TradeService.java`  
-  Trade 保存処理と Position 更新連携を担当
-- `TradeController.java`  
-  Trade API を提供する Controller
-
-### Position関連
-- `Position.java`  
-  現在保有しているポジションを保持するエンティティ
-- `PositionType.java`  
-  ポジション方向（LONG / SHORT）を表す enum
-- `PositionStatus.java`  
-  ポジション状態（OPEN / CLOSED）を表す enum
-- `PositionRepository.java`  
-  Position テーブルにアクセスする Repository
-- `PositionService.java`  
-  Position の更新・取得・含み損益計算を担当
-- `PositionController.java`  
-  Position API を提供する Controller
-- `PositionPlResponse.java`  
-  含み損益表示用のレスポンスDTO
-- `PositionPlSummaryResponse.java`  
-  含み損益サマリ表示用のレスポンスDTO
-
-### DailyPrice関連
-- `DailyPrice.java`  
-  日次価格データを保持するエンティティ
-- `DailyPriceRepository.java`  
-  DailyPrice テーブルにアクセスする Repository
-- `DailyPriceService.java`  
-  日次価格取得ロジックを担当
-- `DailyPriceController.java`  
-  DailyPrice API を提供する Controller
-
-### Instrument関連
-- `Instrument.java`  
-  銘柄情報を表すクラス
-- `InstrumentService.java`  
-  銘柄情報の取得処理を担当
-- `InstrumentController.java`  
-  銘柄情報 API を提供する Controller
+### DailyPrice系
+- `GET /daily-prices`
+- `GET /daily-prices?symbol=7203`
 
 ## DB設計のポイント
 
@@ -211,3 +196,26 @@ Trade の結果として現在保有している状態です。
 ```bash
 docker compose up -d
 ./mvnw spring-boot:run
+
+### フロントエンド
+npm install
+npm run dev
+
+### 今後やりたいこと
+Python のおすすめ株抽出ロジックとフロントを連携
+Lambda + EventBridge で日次価格取得を自動化
+Topページのおすすめ取引を動的化
+おすすめ株ページを実データベース化
+シグナルあり/なしでの取引成績比較機能
+オプション取引ページの実装
+日経平均mini売り建てページの実装
+補足
+
+現時点では、まずデモトレードアプリのコアとなる
+
+売買履歴
+保有ポジション
+含み損益
+相場シグナルと売買根拠の記録
+
+を一通りつなげることを重視して開発しています。
