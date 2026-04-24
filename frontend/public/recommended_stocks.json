@@ -1,0 +1,26 @@
+[
+  {
+    "symbol": "5333",
+    "companyName": "日本碍子",
+    "currentPrice": 4568.0,
+    "reason": "5年高値更新"
+  },
+  {
+    "symbol": "6101",
+    "companyName": "ツガミ",
+    "currentPrice": 4765.0,
+    "reason": "5年高値更新"
+  },
+  {
+    "symbol": "6503",
+    "companyName": "三菱電機",
+    "currentPrice": 6091.0,
+    "reason": "5年高値更新"
+  },
+  {
+    "symbol": "6752",
+    "companyName": "パナソニックホールディングス",
+    "currentPrice": 3030.0,
+    "reason": "5年高値更新"
+  }
+]
