@@ -28,10 +28,17 @@ public class PositionService {
         List<PositionPlResponse> result = new ArrayList<>();
 
         for (Position position : positions) {
-            DailyPrice latestPrice = dailyPriceRepository.findTopBySymbolOrderByPriceDateDesc(position.getSymbol())
-                    .orElseThrow(() -> new IllegalArgumentException("DailyPrice not found: symbol=" + position.getSymbol()));
+        	DailyPrice latestPrice = dailyPriceRepository
+        	        .findTopBySymbolOrderByPriceDateDesc(position.getSymbol())
+        	        .orElse(null);
 
-            BigDecimal currentPrice = latestPrice.getClosePrice();
+        	BigDecimal currentPrice;
+
+        	if (latestPrice != null) {
+        	    currentPrice = latestPrice.getClosePrice();
+        	} else {
+        	    currentPrice = BigDecimal.valueOf(position.getAvgPrice());
+        	}
             BigDecimal avgPrice = BigDecimal.valueOf(position.getAvgPrice());
             BigDecimal quantity = BigDecimal.valueOf(position.getQuantity());
 
